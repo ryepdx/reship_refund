@@ -1,0 +1,14 @@
+-
+  Create a shipping rate card for reshipping
+-
+  !record {model: shipping.rate.card, id: shipping_rate_reship_card}:
+    name: Reship
+
+-
+  Reshipping is free.
+-
+  !record {model: shipping.rate, id: shipping_rate_reship}:
+    charge: 0.0
+    from_price: 0
+    physical_only: False
+    card_id: shipping_rate_reship_card

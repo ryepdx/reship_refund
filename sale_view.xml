@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>
+ 	     <record model="ir.ui.view" id="reship_refund_sale_order_form">
+			<field name="name">reship.refund.sale.order.form</field>
+			<field name="model">sale.order</field>
+			<field name="inherit_id" ref="account_payment_creditcard.sale_order_changes_for_credit_card"/>
+			<field name="arch" type="xml">
+                <xpath expr="//page[@string='Other Information']//field[@name='payment_method']" position="replace">
+                </xpath>
+                <xpath expr="//field[@name='partner_shipping_id']" position="after">
+                    <field name="payment_method" />
+                </xpath>
+                <xpath expr="//header//field[@name='state']" position="before">
+                    <button string="Reship" name="%(action_reship_wizard)d" type="action"
+                            states="cancel,done" groups="base.group_user" />
+                </xpath>
+                <xpath expr="//field[@name='ship_method_id']" position="after">
+                    <field name="reship_reason" />
+                </xpath>
+            </field>
+        </record>
+	</data>
+</openerp>

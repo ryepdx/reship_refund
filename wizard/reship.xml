@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+     <data>
+        <record id="reship_wizard_view" model="ir.ui.view">
+             <field name="name">reship.wizard.form</field>
+             <field name="model">reship.wizard</field>
+             <field name="arch" type="xml">
+				<form string="Reship" version="7.0">
+					<group height="50" width="320">
+                        <group>
+                            <field name="sale_order_id" readonly="1" />
+                            <field name="reason" />
+                            <field name="copy_lines" />
+                        </group>
+						<footer>
+							<button special="cancel" string="Cancel" icon="gtk-cancel"/>
+							or
+							<button name="reship" string="Reship" type="object" icon="gtk-ok" default_focus="1"/>
+		 				</footer>
+ 					</group>
+				</form>
+			</field>
+		</record>
+
+        <record id="action_reship_wizard" model="ir.actions.act_window">
+            <field name="name">Reship Wizard</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">reship.wizard</field>
+			<field name="view_id" ref="reship_wizard_view"/>
+            <field name="target">new</field>
+        </record>
+	</data>
+</openerp>
