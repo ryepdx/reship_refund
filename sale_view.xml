@@ -16,7 +16,7 @@
                             states="cancel,done" groups="base.group_user" />
                 </xpath>
                 <xpath expr="//field[@name='ship_method_id']" position="after">
-                    <field name="reship_reason" />
+                    <field name="reship_reason" invisible="1" />
                 </xpath>
             </field>
         </record>

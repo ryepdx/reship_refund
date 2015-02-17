@@ -21,7 +21,6 @@ class sale_order(osv.osv):
 
         for no_charge_id in no_charge_ids:
             res[no_charge_id] = {'amount_untaxed': 0, 'amount_tax': 0, 'amount_total': 0}
-
         return res
 
     def _sale_order_amount_all_columns(_amount_all):
@@ -48,7 +47,7 @@ class sale_order(osv.osv):
     _columns = dict([('payment_method', fields.selection(_get_payment_methods, 'Payment Method')),
                      ('reship_reason', fields.selection(
                          [('quality', 'Item Quality'), ('wrong', 'Wrong Item'), ('damaged', 'Damaged Item')],
-                         'Reason for Reship', required=True))] + _sale_order_amount_all_columns(_amount_all).items())
+                         'Reason for Reship'))] + _sale_order_amount_all_columns(_amount_all).items())
 
     def reship(self, cr, uid, ids, copy_lines=True, reason=None, context=None):
         reship_rate_id = self.pool.get('ir.model.data').get_object(
