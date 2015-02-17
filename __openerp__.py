@@ -28,6 +28,10 @@
     'website': 'http://www.ryepdx.com',
     'depends': ['sale', 'account_payment_creditcard', 'sale_negotiated_shipping'],
     'data': ['wizard/reship.xml', 'sale_view.xml', 'reship_rate.yml'],
+    'test': [
+        'test/reship_wizard.xml',
+        'test/reship_wizard.yml'
+    ],
     'auto_install': False,
     'installable': True,
 }

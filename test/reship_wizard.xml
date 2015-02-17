@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <!-- Create product -->
+        <record id="test_product" model="product.product">
+            <field name="name">Test Product</field>
+            <field name="default_code">TPRD</field>
+            <field name="categ_id" ref="product.product_category_3"/>
+            <field name="standard_price">20.0</field>
+            <field name="list_price">30.0</field>
+            <field name="type">consu</field>
+            <field name="uom_id" ref="product.product_uom_unit"/>
+            <field name="uom_po_id" ref="product.product_uom_unit"/>
+            <field name="description_sale">A test product.</field>
+        </record>
+
+        <!-- Stock locations -->
+        <record id="test_product_location" model="stock.location">
+            <field name="company_id" ref="base.main_company"/>
+            <field name="location_id" ref="stock.stock_location_stock"/>
+            <field name="usage">internal</field>
+            <field name="chained_location_type">none</field>
+            <field name="name">Test Product Bin</field>
+            <field name="chained_auto_packing">manual</field>
+        </record>
+
+        <!-- Primary bin
+        <record id="primary_product_bin" model="product.bin.location.info">
+            <field name="location_id" ref="test_product_location"/>
+            <field name="product_id" ref="test_product"/>
+            <field name="storage_type">primary</field>
+        </record> -->
+
+        <!-- Inventory -->
+        <record id="inventory" model="stock.inventory">
+            <field name="name">Test Inventory</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+
+        <record id="inventory_line_1" model="stock.inventory.line">
+            <field name="inventory_id" ref="inventory"/>
+            <field name="product_id" ref="test_product"/>
+            <field name="location_id" ref="test_product_location"/>
+            <field name="product_qty">1</field>
+            <field name="product_uom" ref="product.product_uom_unit"/>
+        </record>
+
+        <function model="stock.inventory" name="action_confirm">
+            <function eval="[[('id', '=', ref('inventory'))]]" model="stock.inventory" name="search"/>
+        </function>
+
+        <function model="stock.inventory" name="action_done">
+            <function eval="[[('id', '=', ref('inventory'))]]" model="stock.inventory" name="search"/>
+        </function>
+    </data>
+</openerp>
