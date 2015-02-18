@@ -12,8 +12,7 @@
                             <field name="reason" />
                             <field name="reship_lines" />
                             <field name="refund_lines" />
-                            <field name="new_lines" />
-                            <field name="preview" />
+                            <field name="new_order_lines" />
                         </group>
 						<footer>
 							<button special="cancel" string="Cancel" icon="gtk-cancel"/>

@@ -8,14 +8,21 @@ class account_invoice(osv.osv):
 
     def _refund_cleanup_lines(self, cr, uid, lines, context=None):
         if context and 'refund_lines' in context:
-            lines = [line for line in lines if line.id in context['refund_lines']]
-        return super(account_invoice, self)._refund_cleanup_lines(cr, uid, lines, context=context)
+            new_lines = []
+            for line in lines:
+                if line.id not in context['refund_lines']:
+                    continue
+
+                line.quantity = context['refund_lines'][line.id]
+                new_lines.append(line)
+
+        return super(account_invoice, self)._refund_cleanup_lines(cr, uid, new_lines, context=context)
 
     def _prepare_refund(self, cr, uid, invoice, **kwargs):
         data = super(account_invoice, self)._prepare_refund(cr, uid, invoice, **kwargs)
         context = kwargs.get("context", {})
-
         data['invoice_line'] = data.get('invoice_line', [])
+
         if 'refund_total' in context and data['invoice_line']:
             for x, y, line in data['invoice_line']:
                 line['price_unit'] = 0
