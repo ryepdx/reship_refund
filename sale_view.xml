@@ -12,11 +12,11 @@
                     <field name="payment_method" />
                 </xpath>
                 <xpath expr="//header//field[@name='state']" position="before">
-                    <button string="Reship" name="%(action_reship_wizard)d" type="action"
+                    <button string="Reship/Refund" name="%(action_reship_wizard)d" type="action"
                             states="cancel,done" groups="base.group_user" />
                 </xpath>
                 <xpath expr="//field[@name='ship_method_id']" position="after">
-                    <field name="reship_reason" invisible="1" />
+                    <field name="reship_reason" attrs="{'invisible': [('reship_reason', '=', False)]}" />
                 </xpath>
             </field>
         </record>

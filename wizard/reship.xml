@@ -5,27 +5,141 @@
              <field name="name">reship.wizard.form</field>
              <field name="model">reship.wizard</field>
              <field name="arch" type="xml">
-				<form string="Reship" version="7.0">
+				<form string="Reship/Refund" version="7.0">
 					<group height="50" width="320">
-                        <group>
-                            <field name="sale_order_id" readonly="1" />
-                            <field name="reason" />
-                            <field name="reship_lines" />
-                            <field name="refund_lines" />
-                            <field name="new_order_lines" />
-                        </group>
-						<footer>
-							<button special="cancel" string="Cancel" icon="gtk-cancel"/>
-							or
-							<button name="complete" string="Complete" type="object" icon="gtk-ok" default_focus="1"/>
-		 				</footer>
- 					</group>
+                        <field name="error_message" class="ui-state-error-text"
+                               attrs="{'invisible': [('error_message', '=', False)]}"/>
+                        <field name="sale_order_id" readonly="1" />
+                        <field name="reason" />
+                        <field name="original_lines">
+                            <tree string="Original Lines" create="false" delete="false" editable="top">
+                                <field name="sale_line_id" invisible="1"/>
+                                <field name="selected" string="" />
+                                <field name="product_id"/>
+                                <field name="product_uom_qty"/>
+                                <field name="product_uom"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <button string="Reship" name="reship_lines" type="object" class="oe_right"/>
+                    <button string="Refund" name="refund_lines" type="object" class="oe_right"
+                            attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
+                    <group height="50" width="320">
+                        <field name="reship_lines">
+                            <tree string="Reship Line" create="false" delete="false" editable="top">
+                                <field name="sale_line_id" invisible="1"/>
+                                <field name="selected" string=""/>
+                                <field name="product_id"/>
+                                <field name="quantity" on_change="onchange_quantity(quantity)"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <button string="Cancel Reship" name="cancel_reship_lines" type="object" class="oe_right"/>
+                    <field name="invoice_exists" invisible="1"/>
+                    <group height="50" width="320">
+                        <field name="refund_lines" attrs="{'invisible': [('invoice_exists', '=', False)]}">
+                            <tree string="Refund Line" create="false" delete="false" editable="top">
+                                <field name="sale_line_id" invisible="1"/>
+                                <field name="selected" string=""/>
+                                <field name="product_id"/>
+                                <field name="quantity" on_change="onchange_quantity(quantity)"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <button string="Cancel Refund" name="cancel_refund_lines" type="object"
+                            class="oe_right" attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
+                    <group height="50" width="320">
+                        <field name="partner_id" invisible="1"/>
+                        <field name="pricelist_id" invisible="1"/>
+                        <field name="shop_id" invisible="1"/>
+                        <field name="date_order" invisible="1"/>
+                        <field name="fiscal_position" invisible="1"/>
+                        <field name="new_order_lines" editable="bottom"
+                               attrs="{'invisible': [('invoice_exists', '=', False)]}">
+                            <form string="Sales Order Lines" version="7.0">
+                                    <header groups="base.group_user">
+                                        <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done" statusbar_colors='{"exception":"red","cancel":"red"}'/>
+                                    </header>
+                                    <group>
+                                        <group>
+                                            <field name="state" invisible="1" />
+                                            <field name="product_id"
+                                                context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'shop':parent.shop_id, 'uom':product_uom}"
+                                                groups="base.group_user"
+                                                on_change="product_id_change(parent.pricelist_id, product_id, product_uom_qty, product_uom, product_uos_qty, product_uos, name, parent.partner_id, False, True, parent.date_order, False, parent.fiscal_position, False, context)"/>
+                                            <label for="product_uom_qty"/>
+                                            <div>
+                                                <field
+                                                    context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'shop':parent.shop_id, 'uom':product_uom}"
+                                                    name="product_uom_qty" class="oe_inline"
+                                                    on_change="product_id_change(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, False, parent.fiscal_position, True, context)"/>
+                                                <field name="product_uom" groups="product.group_uom" class="oe_inline oe_no_button"
+                                                    on_change="product_uom_change(parent.pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,parent.partner_id, False, False, parent.date_order, context)"/>
+                                            </div>
+                                            <label for="product_uos_qty" groups="product.group_uos"/>
+                                            <div groups="product.group_uos">
+                                                <field name="product_uos_qty" class="oe_inline"/>
+                                                <field name="product_uos" options='{"no_open": True}' class="oe_inline"/>
+                                            </div>
+                                            <field name="price_unit"/>
+                                            <label for="discount" groups="sale.group_discount_per_so_line"/>
+                                            <div name="discount" groups="sale.group_discount_per_so_line">
+                                                <field name="discount" class="oe_inline"/> %%
+                                            </div>
+                                        </group>
+                                        <group>
+                                            <field name="tax_id" widget="many2many_tags" domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]"/>
+                                            <field name="type"/>
+                                            <field name="th_weight"/>
+                                            <!-- we should put a config wizard for these two fields -->
+                                            <field name="address_allotment_id"/>
+                                        </group>
+                                    </group>
+                                    <label for="name"/>
+                                    <field name="name"/>
+                                    <div groups="base.group_no_one">
+                                        <label for="invoice_lines"/>
+                                        <field name="invoice_lines"/>
+                                    </div>
+                                </form>
+                                <tree string="Sales Order Lines" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="state" invisible="1"/>
+                                    <field name="th_weight" invisible="1"/>
+                                    <field name="product_id"
+                                        context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'shop':parent.shop_id, 'uom':product_uom}"
+                                        groups="base.group_user"
+                                        on_change="product_id_change(parent.pricelist_id, product_id, product_uom_qty, product_uom, product_uos_qty, product_uos, name, parent.partner_id, False, True, parent.date_order, False, parent.fiscal_position, False, context)"/>
+                                    <field name="name"/>
+                                    <field name="product_uom_qty"
+                                        context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'shop':parent.shop_id, 'uom':product_uom}"
+                                        on_change="product_id_change(parent.pricelist_id, product_id, product_uom_qty, product_uom, product_uos_qty, product_uos, name, parent.partner_id, False, False, parent.date_order, False, parent.fiscal_position, True, context)"/>
+                                    <field name="product_uom"
+                                        on_change="product_uom_change(parent.pricelist_id, product_id, product_uom_qty, product_uom, product_uos_qty, product_uos, name, parent.partner_id, False, False, parent.date_order, context)"
+                                        groups="product.group_uom" options='{"no_open": True}'/>
+                                    <field name="product_uos_qty" groups="product.group_uos" invisible="1"/>
+                                    <field name="product_uos" string="UoS" groups="product.group_uos" invisible="1"/>
+                                    <field name="tax_id" widget="many2many_tags" domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]"/>
+                                    <field name="price_unit"/>
+                                    <field name="discount" groups="sale.group_discount_per_so_line"/>
+                                    <field name="price_subtotal"/>
+                                </tree>
+                        </field>
+                    </group>
+                    <group height="50" width="320">
+                        <field name="gross_refund" attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
+                    </group>
+                    <footer>
+                        <button special="cancel" string="Cancel" icon="gtk-cancel"/>
+                        or
+                        <button name="complete" string="Complete" type="object" icon="gtk-ok" default_focus="1"/>
+                    </footer>
 				</form>
 			</field>
 		</record>
 
         <record id="action_reship_wizard" model="ir.actions.act_window">
-            <field name="name">Reship Wizard</field>
+            <field name="name">Reship/Refund</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">reship.wizard</field>
 			<field name="view_id" ref="reship_wizard_view"/>

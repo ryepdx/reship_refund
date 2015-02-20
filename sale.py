@@ -53,12 +53,20 @@ class sale_order(osv.osv):
         reship_rate_id = self.pool.get('ir.model.data').get_object(
             cr, uid, 'reship_refund', 'shipping_rate_reship')
         reship_rate_id = reship_rate_id.id if reship_rate_id else None
-        reship_values = {"payment_method": "no_charge", "ship_method_id": reship_rate_id, "shipcharge": 0}
+        reship_values = {
+            "name": self.pool.get('ir.sequence').get(cr, uid, 'sale.order'),
+            "reship_reason": reason,
+            "invoice_ids": [],
+            "picking_ids": [],
+            "client_order_ref": '',
+            "state": "draft",
+            "payment_method": "no_charge",
+            "ship_method_id": reship_rate_id,
+            "shipcharge": 0
+        }
 
-        if reason:
-            reship_values["reship_reason"] = reason
-
-        sale_id = self.copy(cr, uid, ids, default=reship_values, context=context)
+        sale_data = self.copy_data(cr, uid, ids, default=reship_values)
+        sale_id = self.create(cr, uid, sale_data, context=context)
 
         if not copy_lines:
             line_pool = self.pool.get('sale.order.line')
