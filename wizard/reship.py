@@ -397,6 +397,15 @@ class wiz_reship(orm.TransientModel):
     def cancel_reship_lines(self, cr, uid, ids, context=None):
         return self._cancel_reship_refund_lines(cr, uid, ids, type="reship", context=context)
 
+    def select_all_original(self, cr, uid, ids, context=None):
+        return self._select_all(cr, uid, ids, type="original", context=context)
+
+    def select_all_reship(self, cr, uid, ids, context=None):
+        return self._select_all(cr, uid, ids, type="reship", context=context)
+
+    def select_all_refund(self, cr, uid, ids, context=None):
+        return self._select_all(cr, uid, ids, type="refund", context=context)
+
     def complete(self, cr, uid, ids, context=None):
         if context is None:
             context = {}
@@ -493,6 +502,24 @@ class wiz_reship(orm.TransientModel):
             }
         }
 
+    def _select_all(self, cr, uid, ids, type="reship", context=None):
+        wiz_id = ids
+        if isinstance(ids, list):
+            wiz_id = ids[0]
+
+        pool = self.pool.get("reship.wizard.line.%s" % type)
+        pool.write(cr, uid, pool.search(cr, uid, [('wizard_id', '=', wiz_id)]), {"selected": True})
+
+        return {
+                'name': _("Reship/Refund"),
+                'view_mode': 'form',
+                'view_type': 'form',
+                'res_id': wiz_id,
+                'res_model': 'reship.wizard',
+                'type': 'ir.actions.act_window',
+                'nodestroy': True,
+                'target': 'new',
+            }
 
     def _reship_refund_line(self, cr, uid, ids, line_ids, type="reship", context=None):
         if not ids:

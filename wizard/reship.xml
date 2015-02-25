@@ -24,6 +24,7 @@
                     <button string="Reship" name="reship_lines" type="object" class="oe_right"/>
                     <button string="Refund" name="refund_lines" type="object" class="oe_right"
                             attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
+                    <button string="Select All" name="select_all_original" type="object" class="oe_right"/>
                     <group height="50" width="320">
                         <field name="reship_lines">
                             <tree string="Reship Line" create="false" delete="false" editable="top">
@@ -35,6 +36,7 @@
                         </field>
                     </group>
                     <button string="Cancel Reship" name="cancel_reship_lines" type="object" class="oe_right"/>
+                    <button string="Select All" name="select_all_reship" type="object" class="oe_right"/>
                     <field name="invoice_exists" invisible="1"/>
                     <group height="50" width="320">
                         <field name="refund_lines" attrs="{'invisible': [('invoice_exists', '=', False)]}">
@@ -47,6 +49,8 @@
                         </field>
                     </group>
                     <button string="Cancel Refund" name="cancel_refund_lines" type="object"
+                            class="oe_right" attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
+                    <button string="Select All" name="select_all_refund" type="object"
                             class="oe_right" attrs="{'invisible': [('invoice_exists', '=', False)]}"/>
                     <group height="50" width="320">
                         <field name="partner_id" invisible="1"/>
