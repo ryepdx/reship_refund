@@ -14,6 +14,19 @@
             <field name="description_sale">A test product.</field>
         </record>
 
+        <record id="test_product_2" model="product.product">
+            <field name="name">Test Product 2</field>
+            <field name="default_code">TPR2</field>
+            <field name="categ_id" ref="product.product_category_3"/>
+            <field name="standard_price">5.0</field>
+            <field name="list_price">10.0</field>
+            <field name="type">consu</field>
+            <field name="uom_id" ref="product.product_uom_unit"/>
+            <field name="uom_po_id" ref="product.product_uom_unit"/>
+            <field name="description_sale">Another test product.</field>
+        </record>
+
+
         <!-- Stock locations -->
         <record id="test_product_location" model="stock.location">
             <field name="company_id" ref="base.main_company"/>
@@ -23,6 +36,7 @@
             <field name="name">Test Product Bin</field>
             <field name="chained_auto_packing">manual</field>
         </record>
+
 
         <!-- Primary bin
         <record id="primary_product_bin" model="product.bin.location.info">
@@ -41,7 +55,7 @@
             <field name="inventory_id" ref="inventory"/>
             <field name="product_id" ref="test_product"/>
             <field name="location_id" ref="test_product_location"/>
-            <field name="product_qty">1</field>
+            <field name="product_qty">100</field>
             <field name="product_uom" ref="product.product_uom_unit"/>
         </record>
 
@@ -51,6 +65,28 @@
 
         <function model="stock.inventory" name="action_done">
             <function eval="[[('id', '=', ref('inventory'))]]" model="stock.inventory" name="search"/>
+        </function>
+
+        <!-- More inventory -->
+        <record id="inventory_2" model="stock.inventory">
+            <field name="name">Test Inventory</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+
+        <record id="inventory_line_2" model="stock.inventory.line">
+            <field name="inventory_id" ref="inventory_2"/>
+            <field name="product_id" ref="test_product_2"/>
+            <field name="location_id" ref="test_product_location"/>
+            <field name="product_qty">100</field>
+            <field name="product_uom" ref="product.product_uom_unit"/>
+        </record>
+
+        <function model="stock.inventory" name="action_confirm">
+            <function eval="[[('id', '=', ref('inventory_2'))]]" model="stock.inventory" name="search"/>
+        </function>
+
+        <function model="stock.inventory" name="action_done">
+            <function eval="[[('id', '=', ref('inventory_2'))]]" model="stock.inventory" name="search"/>
         </function>
     </data>
 </openerp>

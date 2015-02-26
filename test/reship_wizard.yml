@@ -1,6 +1,150 @@
 -
   Create a sales order...
 -
+  !record {model: sale.order, id: new_line_sale}:
+    name: "Test SO"
+    company_id: stock.res_company_2
+    partner_id: base.partner_demo
+    partner_invoice_id: base.partner_demo
+    partner_shipping_id: base.partner_demo
+    shop_id: sale.sale_shop_1
+    pricelist_id: product.list0
+
+-
+  ...with a sales order line...
+-
+  !record {model: sale.order.line, id: new_line_line}:
+    order_id: new_line_sale
+    name: "Test Product"
+    product_id: test_product
+    product_uom_qty: 1
+    product_uos_qty: 1
+    product_uom: product.product_uom_unit
+    price_unit: 30.0
+
+-
+  ...and confirm it.
+-
+  !python {model: sale.order}: |
+    self.action_button_confirm(cr, uid, [ref('new_line_sale')], context=context)
+
+-
+  Create a context for the sale order.
+-
+  !python {model: reship.wizard}: |
+    context['active_model'] = "sale.order"
+    context['active_id'] = ref("new_line_sale")
+
+-
+  Create a wizard.
+-
+  !record {model: reship.wizard, id: new_line_wiz}:
+    sale_order_id: new_line_sale
+
+-
+  Make sure that we can create new lines on the new sale order.
+-
+  !python {model: reship.wizard}: |
+    wizard = self.browse(cr, uid, ref("new_line_wiz"), context=context)
+    line = self.pool.get("sale.order.line").copy_data(cr, uid, wizard.original_lines[0].sale_line_id.id)
+    self.write(cr, uid, ref("new_line_wiz"), {"new_order_lines": [(0, 0, line)]},
+      context={"active_model": "reship.wizard", "active_id": ref("new_line_wiz")})
+    res = self.complete(cr, uid, [wizard.id], context=context)
+    wizard = self.browse(cr, uid, ref("new_line_wiz"), context=context)
+    assert len(wizard.original_lines) > 0, "Removes lines from original_lines when it shouldn't!"
+    assert res.get('res_model') == 'sale.order', "Did not return sale.order in response!"
+    assert res.get('res_id'), "Did not return sale.order ID in response!"
+    sale = self.pool.get("sale.order").browse(cr, uid, res.get("res_id"), context=context)
+    assert sale.amount_total == 30.0, "Sale total is incorrect!"
+    assert len(sale.order_line) == 1, "Sale does not have only one line!"
+
+-
+  Create a sales order...
+-
+  !record {model: sale.order, id: no_net_refund_sale}:
+    name: "Test SO"
+    company_id: stock.res_company_2
+    partner_id: base.partner_demo
+    partner_invoice_id: base.partner_demo
+    partner_shipping_id: base.partner_demo
+    shop_id: sale.sale_shop_1
+    pricelist_id: product.list0
+
+-
+  ...with a sales order line...
+-
+  !record {model: sale.order.line, id: no_net_refund_line}:
+    order_id: no_net_refund_sale
+    name: "Test Product"
+    product_id: test_product
+    product_uom_qty: 1
+    product_uos_qty: 1
+    product_uom: product.product_uom_unit
+    price_unit: 30.0
+
+-
+  ...plus another sales order line...
+-
+  !record {model: sale.order.line, id: no_net_refund_line_2}:
+    order_id: no_net_refund_sale
+    name: "Test Product 2"
+    product_id: test_product_2
+    product_uom_qty: 1
+    product_uos_qty: 1
+    product_uom: product.product_uom_unit
+    price_unit: 10.0
+
+-
+  ...and confirm it.
+-
+  !python {model: sale.order}: |
+    self.action_button_confirm(cr, uid, [ref('no_net_refund_sale')], context=context)
+
+-
+  Create an invoice for our sale so we can start issuing refunds.
+-
+  !python {model: sale.order}: |
+    self.action_invoice_create(cr, uid, [ref('no_net_refund_sale')], context=context)
+
+-
+  Create a context for the sale order.
+-
+  !python {model: reship.wizard}: |
+    context['active_model'] = "sale.order"
+    context['active_id'] = ref("no_net_refund_sale")
+
+-
+  Create a wizard.
+-
+  !record {model: reship.wizard, id: no_net_refund_wiz}:
+    sale_order_id: no_net_refund_sale
+
+-
+  Make sure that sales with more new lines than refunds don't create refund invoices.
+-
+  !python {model: reship.wizard}: |
+    wizard = self.browse(cr, uid, ref("no_net_refund_wiz"), context=context)
+    line = self.pool.get("sale.order.line").copy_data(cr, uid, ref('no_net_refund_line'))
+    self.write(cr, uid, ref("no_net_refund_wiz"), {"new_order_lines": [(0, 0, line)]},
+      context={"active_model": "reship.wizard", "active_id": ref("no_net_refund_wiz")})
+    refund_line = [l for l in wizard.original_lines if l.sale_line_id.id == ref('no_net_refund_line_2')][0]
+    self.pool.get("reship.wizard.line.original").write(cr, uid, refund_line.id, {"selected": True})
+    self.refund_lines(cr, uid, [wizard.id])
+    res = self.complete(cr, uid, [wizard.id], context=context)
+    wizard = self.browse(cr, uid, ref("no_net_refund_wiz"), context=context)
+    invoices = wizard.sale_order_id.invoice_ids
+    assert len(invoices) == 1, "Got %s invoice(s) for the sale!" % len(invoices)
+    assert "refund" not in invoices[0].type, "Has a refund invoice!"
+    assert res.get('res_model') == 'sale.order', "Did not return sale.order in response!"
+    assert res.get('res_id'), "Did not return sale.order ID in response!"
+    sale = self.pool.get("sale.order").browse(cr, uid, res.get("res_id"), context=context)
+    assert sale.amount_total == 20.0, "Sale total is incorrect!"
+    assert sale.refund_discount == -10.0, "Refund discount is incorrect!"
+    assert len(sale.order_line) == 1, "Sale does not have only one line!"
+
+-
+  Create a sales order...
+-
   !record {model: sale.order, id: incorrect_sale}:
     name: "Test SO"
     company_id: stock.res_company_2
@@ -34,25 +178,6 @@
   !python {model: reship.wizard}: |
     context['active_model'] = "sale.order"
     context['active_id'] = ref("incorrect_sale")
-
--
-  Create a wizard.
--
-  !record {model: reship.wizard, id: fail_wiz}:
-    sale_order_id: incorrect_sale
-
--
-  Make sure that we can't add new items if we don't have enough refunded items.
--
-  !python {model: reship.wizard}: |
-    wizard = self.browse(cr, uid, ref("fail_wiz"), context=context)
-    line = self.pool.get("sale.order.line").copy_data(cr, uid, wizard.original_lines[0].sale_line_id.id)
-    self.write(cr, uid, ref("fail_wiz"), {"new_order_lines": [(0, 0, line)]},
-      context={"active_model": "reship.wizard", "active_id": ref("fail_wiz")})
-    self.complete(cr, uid, [wizard.id], context=context)
-    wizard = self.browse(cr, uid, ref("fail_wiz"), context=context)
-    assert wizard.error_message, "Does not show error when adding lines without refunds!"
-    assert len(wizard.original_lines) > 0, "Removes lines from original_lines when it shouldn't!"
 
 -
   Create a wizard.
@@ -163,7 +288,6 @@
     sale = self.pool.get("sale.order").browse(cr, uid, res.get("res_id"), context=context)
     assert sale.amount_total == 0.0, "Sale total is not zero!"
     assert len(sale.order_line) == 1, "Sale does not have only one line!"
-    assert sale.payment_method == "no_charge", "Sale has wrong payment method!"
 
 -
   Create a wizard.
@@ -188,9 +312,9 @@
     assert res.get('res_model') == 'sale.order', "Did not return sale.order in response!"
     assert res.get('res_id'), "Did not return sale.order ID in response!"
     sale = self.pool.get("sale.order").browse(cr, uid, res.get("res_id"), context=context)
+    assert sale.refund_discount == -30.0, "Refund discount is incorrect!"
     assert sale.amount_total == 0.0, "Sale total is not zero!"
     assert len(sale.order_line) == 1, "Sale does not have only one line!"
-    assert sale.payment_method == "no_charge", "Sale has incorrect payment method!"
 
 -
   Create a sales order...
@@ -374,4 +498,3 @@
     assert sale.amount_total == 0.0, "Sale total is not zero!"
     assert len(sale.order_line) == 1, "Sale does not have only one line!"
     assert sale.order_line[0].product_uom_qty == 1, "Reship is not just for one product!"
-    assert sale.payment_method == "no_charge", "Sale has wrong payment method!"
