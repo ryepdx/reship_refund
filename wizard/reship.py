@@ -379,13 +379,13 @@ class wiz_reship(orm.TransientModel):
         'fiscal_position': _sale_order("fiscal_position"),
     }
 
-    def refund_line(self, cr, uid, ids, line_ids, quantity=None, context=None):
+    def refund_line(self, cr, uid, ids, line_ids, context=None):
         return self._reship_refund_line(cr, uid, ids, line_ids, type="refund", context=context)
 
     def refund_lines(self, cr, uid, ids, context=None):
         return self._reship_refund_lines(cr, uid, ids, type="refund", context=context)
 
-    def reship_line(self, cr, uid, ids, line_ids, quantity=None, context=None):
+    def reship_line(self, cr, uid, ids, line_ids, context=None):
         return self._reship_refund_line(cr, uid, ids, line_ids, type="reship", context=context)
 
     def reship_lines(self, cr, uid, ids, context=None):
