@@ -19,6 +19,11 @@ class sale_order(osv.osv):
         charge_ids = list(set(ids) - set(no_charge_ids))
         res = super(sale_order, self)._amount_all(cr, uid, charge_ids, field_name, arg, context=context)
 
+        refund_discount_orders = self.browse(cr, uid, self.search(
+            cr, uid, [('id', 'in', ids), ('refund_discount', '!=', 0)], context=context))
+        for order in refund_discount_orders:
+            res[order.id]['amount_total'] = max(0, res[order.id]['amount_total'] + order.refund_discount)
+
         for no_charge_id in no_charge_ids:
             res[no_charge_id] = {'amount_untaxed': 0, 'amount_tax': 0, 'amount_total': 0}
         return res
@@ -44,28 +49,36 @@ class sale_order(osv.osv):
 
         return columns
 
+    def _invoice_get_order(invpool, cr, uid, ids, context=None):
+        return invpool.pool.get('sale.order').search(cr, uid, [('refund_invoice_ids', 'in', ids)], context=context)
+
     _columns = dict([('payment_method', fields.selection(_get_payment_methods, 'Payment Method')),
                      ('reship_reason', fields.selection(
                          [('quality', 'Item Quality'), ('wrong', 'Wrong Item'), ('damaged', 'Damaged Item')],
-                         'Reason for Reship'))] + _sale_order_amount_all_columns(_amount_all).items())
+                         'Reason for Reship')),
+                        ('refund_invoice_ids', fields.many2many(
+                            'account.invoice', 'sale_order_refund_invoice_rel', 'order_id',
+                            'invoice_id', 'Invoice Lines', readonly=True)),
+                        ('refund_discount', fields.float('Refund Discount', readonly=True,
+                            digits_compute=dp.get_precision('Account')))
+                     ] + _sale_order_amount_all_columns(_amount_all).items())
 
-    def reship(self, cr, uid, ids, copy_lines=True, reason=None, context=None):
+    def reship(self, cr, uid, ids, copy_lines=True, reason=None, default={}, context=None):
         reship_rate_id = self.pool.get('ir.model.data').get_object(
             cr, uid, 'reship_refund', 'shipping_rate_reship')
         reship_rate_id = reship_rate_id.id if reship_rate_id else None
-        reship_values = {
+        default.update({
             "name": self.pool.get('ir.sequence').get(cr, uid, 'sale.order'),
             "reship_reason": reason,
             "invoice_ids": [],
             "picking_ids": [],
             "client_order_ref": '',
             "state": "draft",
-            "payment_method": "no_charge",
             "ship_method_id": reship_rate_id,
             "shipcharge": 0
-        }
+        })
 
-        sale_data = self.copy_data(cr, uid, ids, default=reship_values)
+        sale_data = self.copy_data(cr, uid, ids, default=default)
         sale_id = self.create(cr, uid, sale_data, context=context)
 
         if not copy_lines:

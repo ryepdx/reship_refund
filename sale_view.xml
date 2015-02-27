@@ -18,6 +18,9 @@
                 <xpath expr="//field[@name='ship_method_id']" position="after">
                     <field name="reship_reason" attrs="{'invisible': [('reship_reason', '=', False)]}" />
                 </xpath>
+                <xpath expr="//field[@name='amount_untaxed']" position="after">
+                    <field name="refund_discount" attrs="{'invisible': [('refund_discount', '=', 0.0)]}"/>
+                </xpath>
             </field>
         </record>
 	</data>

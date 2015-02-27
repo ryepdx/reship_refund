@@ -419,9 +419,6 @@ class wiz_reship(orm.TransientModel):
         if data.refund_lines and not data.sale_order_id.invoice_ids:
             error = 'Cannot issue a refund on a sale order without an invoice.'
 
-        if data.net_refund < 0:
-            error = 'Total cost of new items exceeds amount being refunded!'
-
         if error:
             self.write(cr, uid, wiz_id, {'error_message': error})
             return {
@@ -459,23 +456,29 @@ class wiz_reship(orm.TransientModel):
 
             sale_lines.append(sale_line)
 
+        default = {}
         if data.refund_lines:
-            context['refund_total'] = data.net_refund
+            default['refund_discount'] = (data.gross_refund * -1)
+            context['refund_total'] = max(0, data.net_refund)
             context['refund_lines'] = dict([
                 (il.id, l.quantity or il.quantity) for l in data.refund_lines for il in l.sale_line_id.invoice_lines
             ])
-            refund_invoices = self.pool.get('account.invoice').refund(
-                cr, uid, [data.sale_order_id.invoice_ids[0].id],
-                description="Refund" + (" issued for: %s" % data.reason if data.reason else ""), context=context)
+
+            refund_invoices = None
+            if data.net_refund > 0:
+                refund_invoices = self.pool.get('account.invoice').refund(
+                    cr, uid, [data.sale_order_id.invoice_ids[0].id],
+                    description="Refund" + (" issued for: %s" % data.reason if data.reason else ""), context=context)
 
             if refund_invoices:
+                default['refund_invoice_ids'] = [(4, inv_id) for inv_id in refund_invoices]
                 sale_pool.write(cr, uid, data.sale_order_id.id, {
-                    "invoice_ids": [(4, inv_id) for inv_id in refund_invoices]
+                    "invoice_ids": default['refund_invoice_ids']
                 })
 
         if sale_lines:
             sale_id = sale_pool.reship(
-                cr, uid, data.sale_order_id.id, reason=data.reason, copy_lines=False, context=context)
+                cr, uid, data.sale_order_id.id, reason=data.reason, copy_lines=False, default=default, context=context)
             sale_pool.write(cr, uid, sale_id, {'order_line': [(0, 0, line) for line in sale_lines]})
 
             view_ref = self.pool.get('ir.model.data').get_object_reference(cr, uid, 'sale', 'view_order_form')
