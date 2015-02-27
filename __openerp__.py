@@ -27,7 +27,7 @@
     'author': 'RyePDX LLC',
     'website': 'http://www.ryepdx.com',
     'depends': ['sale', 'account_payment_creditcard', 'sale_negotiated_shipping'],
-    'data': ['wizard/reship.xml', 'sale_view.xml', 'reship_rate.yml'],
+    'data': ['wizard/reship.xml', 'sale_view.xml', 'reship_rate.yml', 'security/ir.model.access.csv'],
     'test': [
         'test/reship_wizard.xml',
         'test/reship_wizard.yml'

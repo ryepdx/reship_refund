@@ -1,0 +1,6 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"reship_wizard_line_reship_user","reship_wizard_line_reship_user","model_reship_wizard_line_reship","base.group_sale_salesman",1,1,1,1
+"reship_wizard_line_refund_user","reship_wizard_line_refund_user","model_reship_wizard_line_refund","base.group_sale_salesman",1,1,1,1
+"reship_wizard_line_new_user","reship_wizard_line_new_user","model_reship_wizard_line_new","base.group_sale_salesman",1,1,1,1
+"reship_wizard_line_original_user","reship_wizard_line_original_user","model_reship_wizard_line_original","base.group_sale_salesman",1,1,1,1
+"reship_wizard_user","reship_wizard_user","model_reship_wizard","base.group_sale_salesman",1,1,1,1
