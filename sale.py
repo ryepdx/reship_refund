@@ -88,3 +88,19 @@ class sale_order(osv.osv):
         return sale_id
 
 sale_order()
+
+class sale_order_line(osv.osv):
+    _inherit = "sale.order.line"
+
+    def _out_move(self, cr, uid, ids, field_name, arg, context):
+        res = {}
+        for line in self.browse(cr, uid, ids, context=context):
+            out_moves = sorted([m for m in line.move_ids if m.type == 'out'], key=lambda x: x.id)
+            in_moves = [m for m in line.move_ids if m.type == 'in']
+            res[line.id] = out_moves[-1] if len(out_moves) > len(in_moves) else None
+        return res
+
+    _columns = {
+        'out_move': fields.function(_out_move, type="many2one", method=True,
+                                    store=False, readonly=True, string="Outgoing Move")
+    }

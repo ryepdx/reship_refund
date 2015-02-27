@@ -464,6 +464,23 @@ class wiz_reship(orm.TransientModel):
                 (il.id, l.quantity or il.quantity) for l in data.refund_lines for il in l.sale_line_id.invoice_lines
             ])
 
+            return_picking_lines = [
+                {
+                    "move_id": line.sale_line_id.out_move.id,
+                    "product_id": line.sale_line_id.product_id.id,
+                    "quantity": line.quantity,
+                } for line in data.refund_lines if line.sale_line_id.out_move
+            ]
+            if return_picking_lines:
+                return_pool = self.pool.get("stock.return.picking")
+                return_picking_id = return_pool.create(cr, uid, {
+                    'invoice_state': '2binvoiced',
+                    'product_return_moves': [(0, 0, line) for line in return_picking_lines]
+                })
+                out_picking = [line.sale_line_id.out_move.picking_id
+                               for line in data.refund_lines if line.sale_line_id.out_move][0]
+                return_pool.create_returns(cr, uid, [return_picking_id], context={"active_id": out_picking.id})
+
             refund_invoices = None
             if data.net_refund > 0:
                 refund_invoices = self.pool.get('account.invoice').refund(

@@ -362,14 +362,17 @@
 
 -
   Make sure that completing the wizard for a refund shows an appropriate message to the user,
-  and that a refund invoice is created.
+  that a refund invoice is created, and that product stock gets appropriately adjusted.
 -
   !python {model: reship.wizard}: |
+    old_stock = self.pool.get("product.product").browse(cr, uid, ref("test_product")).virtual_available
     wizard = self.browse(cr, uid, ref("complete_refund_wiz"), context=context)
     order_line = wizard.original_lines[0].sale_line_id
     self.pool.get("reship.wizard.line.original").write(cr, uid, wizard.original_lines[0].id, {"selected": True})
     self.refund_lines(cr, uid, [wizard.id])
     res = self.complete(cr, uid, wizard.id)
+    new_stock = self.pool.get("product.product").browse(cr, uid, ref("test_product")).virtual_available
+    assert old_stock+1 == new_stock, "Did not return product to inventory!"
     assert res.get('tag') == 'action_info', "Did not return an appropriate message type!"
     invoices = wizard.sale_order_id.invoice_ids
     assert len(invoices) == 2, "Got %s invoice(s) for the sale!" % len(invoices)
