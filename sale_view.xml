@@ -6,8 +6,6 @@
 			<field name="model">sale.order</field>
 			<field name="inherit_id" ref="sale_negotiated_shipping.view_sale_order_inherit_1"/>
 			<field name="arch" type="xml">
-                <xpath expr="//page[@string='Other Information']//field[@name='payment_method']" position="replace">
-                </xpath>
                 <xpath expr="//field[@name='partner_shipping_id']" position="after">
                     <field name="payment_method" />
                 </xpath>
@@ -20,6 +18,15 @@
                 </xpath>
                 <xpath expr="//field[@name='amount_untaxed']" position="after">
                     <field name="refund_discount" attrs="{'invisible': [('refund_discount', '=', 0.0)]}"/>
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="reship_refund_sale_order_cc_form">
+            <field name="name">reship.refund.sale.order.cc.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="account_payment_creditcard.sale_order_changes_for_credit_card"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@string='Other Information']//field[@name='payment_method']" position="replace">
                 </xpath>
             </field>
         </record>
